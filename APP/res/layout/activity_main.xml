@@ -3,7 +3,15 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="@color/my_gray">   
-
+    
+    <Button
+        android:text="@string/btn1_text"
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClick">
+    </Button>
+    
     <ImageView
 	    android:id="@+id/splash"
 	    android:layout_width="150dp"

@@ -1,22 +1,85 @@
 package com.baboslabs.ktar;
 
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.app.Activity;
-import android.view.Menu;
+import android.app.DownloadManager;
+import android.app.DownloadManager.Query;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.Cursor;
+import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-	}
+	private long enqueue;
+    private DownloadManager dm;
+ 
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+ 
+        // Manage download file complete
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+                    long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+                    Query query = new Query();
+                    query.setFilterById(enqueue);
+                    Cursor c = dm.query(query);
+                    if (c.moveToFirst()) {
+                        int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
+                        if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
+                        	Toast.makeText(getApplicationContext(), "File received!!", Toast.LENGTH_LONG).show();
+                            /*ImageView view = (ImageView) findViewById(R.id.imageView1);
+                            String uriString = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                            view.setImageURI(Uri.parse(uriString));*/
+                        }
+                    }
+                }
+            }
+        };
+        registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+    }
+ 
+    public void onClick(View view) {
+    	// Check if storage is mounted
+    	if(isStorageMounted()){
+    		// Call download manager to download file
+	        dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+	        DownloadManager.Request req = new DownloadManager.Request(Uri.parse("https://s3.amazonaws.com/vubico-storage/test_file/Titanium+Raw.txt"));
+	        req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE)
+	           .setAllowedOverRoaming(false)
+	           .setTitle("Song")
+	           .setDescription("Song description")
+	           .setDestinationInExternalPublicDir("Android/data/com.baboslabs.ktar/", "song.txt");
+	        enqueue = dm.enqueue(req);
+    	}
+    }
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
-
+    
+    
+    
+    
+    
+    public boolean isStorageMounted(){
+    	if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+    		// Ok
+    		return true;
+    		}
+    	else {
+    		// Not mounted
+    		Toast.makeText(getApplicationContext(), "The SDCard is not available!", Toast.LENGTH_LONG).show();
+    		return false;
+    	}
+    }
+	
 }
