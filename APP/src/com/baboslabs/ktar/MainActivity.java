@@ -1,5 +1,7 @@
 package com.baboslabs.ktar;
 
+import java.io.File;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,10 +14,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
 
+	private final String EXT_REL_PATH = "Android/data/com.baboslabs.ktar/";
+	private final File EXT_ABS_PATH = getExternalFilesDir(EXT_REL_PATH);
 	private long enqueue;
     private DownloadManager dm;
  
@@ -24,14 +30,20 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
- 
+        
+        // ListView Example
+        ListView listView = (ListView)findViewById(R.id.listViewDemo);
+        String [] array = {"Antonio", "Giovanni", "Michele", "Giuseppe", "Leonardo", "Alessandro"};
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, R.layout.row, R.id.textViewList, array);
+        listView.setAdapter(arrayAdapter);
+        
         // Manage download file complete
         BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
                 if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-                    long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+                    //long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
                     Query query = new Query();
                     query.setFilterById(enqueue);
                     Cursor c = dm.query(query);
@@ -60,7 +72,7 @@ public class MainActivity extends Activity {
 	           .setAllowedOverRoaming(false)
 	           .setTitle("Song")
 	           .setDescription("Song description")
-	           .setDestinationInExternalPublicDir("Android/data/com.baboslabs.ktar/", "song.txt");
+	           .setDestinationInExternalPublicDir(EXT_REL_PATH, "song.txt");
 	        enqueue = dm.enqueue(req);
     	}
     }
